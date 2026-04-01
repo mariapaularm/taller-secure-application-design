@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Spring App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #ff98fa 0%, #79f6ff 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #6c039c;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #6c039c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #764ba2;
+        }
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: #eee;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .tab-btn.active {
+            background: #ec85e7;
+            color: white;
+            border-color: #667eea;
+        }
+        .form-section {
+            display: none;
+        }
+        .form-section.active {
+            display: block;
+        }
+        .message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .user-info {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .user-info.active {
+            display: block;
+        }
+        .user-info h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .api-test {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .api-test button {
+            font-size: 14px;
+            padding: 8px;
+        }
+        .logout-btn {
+            background: #dc3545;
+            margin-top: 20px;
+        }
+        .logout-btn:hover {
+            background: #c82333;
+        }
+        .response {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Secure Spring App</h1>
+        
+        <!-- Tab Buttons -->
+        <div class="tab-buttons">
+            <button class="tab-btn active" onclick="switchTab('login')">Login</button>
+            <button class="tab-btn" onclick="switchTab('register')">Register</button>
+        </div>
+
+        <!-- Login Form -->
+        <div id="login" class="form-section active">
+            <div class="form-group">
+                <label for="login-username">Username</label>
+                <input type="text" id="login-username" placeholder="Enter username">
+            </div>
+            <div class="form-group">
+                <label for="login-password">Password</label>
+                <input type="password" id="login-password" placeholder="Enter password">
+            </div>
+            <button onclick="login()">Login</button>
+            <div id="login-message"></div>
+        </div>
+
+        <!-- Register Form -->
+        <div id="register" class="form-section">
+            <div class="form-group">
+                <label for="register-username">Username</label>
+                <input type="text" id="register-username" placeholder="Choose username">
+            </div>
+            <div class="form-group">
+                <label for="register-password">Password</label>
+                <input type="password" id="register-password" placeholder="Choose password">
+            </div>
+            <button onclick="register()">Register</button>
+            <div id="register-message"></div>
+        </div>
+
+        <!-- User Info (After Login) -->
+        <div id="user-section" class="user-info">
+            <h2>Welcome!</h2>
+            <p>You are logged in as: <strong id="current-user"></strong></p>
+            
+            <div class="api-test">
+                <button onclick="testSecuredAPI()">Test Secured API Endpoint</button>
+                <div id="api-response"></div>
+            </div>
+            
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = '';
+
+        function switchTab(tab) {
+            document.querySelectorAll('.form-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tab).classList.add('active');
+            event.target.classList.add('active');
+            clearMessages();
+        }
+
+        function clearMessages() {
+            document.getElementById('login-message').innerHTML = '';
+            document.getElementById('register-message').innerHTML = '';
+            document.getElementById('api-response').innerHTML = '';
+        }
+
+        async function register() {
+            const username = document.getElementById('register-username').value.trim();
+            const password = document.getElementById('register-password').value.trim();
+            const messageDiv = document.getElementById('register-message');
+
+            if (!username || !password) {
+                showMessage(messageDiv, 'Please fill in all fields', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (response.ok) {
+                    showMessage(messageDiv, 'Registration successful! You can now login.', 'success');
+                    document.getElementById('register-username').value = '';
+                    document.getElementById('register-password').value = '';
+                    setTimeout(() => switchTab('login'), 1500);
+                } else {
+                    const errorText = await response.text();
+                    showMessage(messageDiv, 'Registration failed: ' + errorText, 'error');
+                }
+            } catch (error) {
+                showMessage(messageDiv, 'Error: ' + error.message, 'error');
+            }
+        }
+
+        async function login() {
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+            const messageDiv = document.getElementById('login-message');
+
+            if (!username || !password) {
+                showMessage(messageDiv, 'Please fill in all fields', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (response.ok) {
+                    showMessage(messageDiv, 'Login successful!', 'success');
+                    document.getElementById('login-username').value = '';
+                    document.getElementById('login-password').value = '';
+                    setTimeout(() => showUserSection(username), 1000);
+                } else {
+                    showMessage(messageDiv, 'Login failed: Invalid credentials', 'error');
+                }
+            } catch (error) {
+                showMessage(messageDiv, 'Error: ' + error.message, 'error');
+            }
+        }
+
+        async function testSecuredAPI() {
+            const responseDiv = document.getElementById('api-response');
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/hello`, {
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.text();
+                    responseDiv.innerHTML = '<strong>✓ API Response:</strong><div class="response">' + data + '</div>';
+                } else {
+                    responseDiv.innerHTML = '<strong>✗ Error:</strong><div class="response">HTTP ' + response.status + '</div>';
+                }
+            } catch (error) {
+                responseDiv.innerHTML = '<strong>✗ Error:</strong><div class="response">' + error.message + '</div>';
+            }
+        }
+
+        async function logout() {
+            try {
+                await fetch(`${API_BASE_URL}/api/logout`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+            hideUserSection();
+        }
+
+        function showUserSection(username) {
+            document.getElementById('current-user').textContent = username;
+            document.getElementById('user-section').classList.add('active');
+            document.querySelectorAll('.form-section').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.tab-buttons').forEach(el => el.style.display = 'none');
+        }
+
+        function hideUserSection() {
+            document.getElementById('user-section').classList.remove('active');
+            document.querySelectorAll('.form-section').forEach(el => el.style.display = 'block');
+            document.querySelectorAll('.tab-buttons').forEach(el => el.style.display = 'flex');
+            switchTab('login');
+        }
+
+        function showMessage(element, message, type) {
+            element.innerHTML = `<div class="message ${type}">${message}</div>`;
+        }
+
+        // Check if already logged in on page load
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/user`, {
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    showUserSection(data.username);
+                }
+            } catch (error) {
+                console.log('Not logged in');
+            }
+        });
+    </script>
+</body>
+</html>
