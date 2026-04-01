@@ -1,0 +1,8 @@
+com\securespring\SecurityConfig.class
+com\securespring\User.class
+com\securespring\SecureSpring.class
+com\securespring\AuthController.class
+com\securespring\HelloController.class
+com\securespring\AuthController$LoginRequest.class
+com\securespring\AuthController$RegisterRequest.class
+com\securespring\UserRepository.class
